@@ -7,6 +7,7 @@ import com.github.topi314.lavasearch.api.SearchManagerConfiguration;
 import com.github.topi314.lavasrc.applemusic.AppleMusicSourceManager;
 import com.github.topi314.lavasrc.deezer.DeezerAudioSourceManager;
 import com.github.topi314.lavasrc.flowerytts.FloweryTTSSourceManager;
+import com.github.topi314.lavasrc.jiosavaan.JioSavaanSourceManager;
 import com.github.topi314.lavasrc.mirror.DefaultMirroringAudioTrackResolver;
 import com.github.topi314.lavasrc.plugin.config.*;
 import com.github.topi314.lavasrc.spotify.SpotifySourceManager;
@@ -39,6 +40,7 @@ public class LavaSrcPlugin implements AudioPlayerManagerConfiguration, SearchMan
 	private YoutubeSearchManager youtube;
 	private VkMusicSourceManager vkMusic;
 	private TidalSourceManager tidal;
+	private JioSavaanSourceManager jioSavaan;
 
 	public LavaSrcPlugin(LavaSrcConfig pluginConfig, SourcesConfig sourcesConfig, LyricsSourcesConfig lyricsSourcesConfig, SpotifyConfig spotifyConfig, AppleMusicConfig appleMusicConfig, DeezerConfig deezerConfig, YandexMusicConfig yandexMusicConfig, FloweryTTSConfig floweryTTSConfig, YouTubeConfig youTubeConfig, VkMusicConfig vkMusicConfig, TidalConfig tidalConfig) {
 		log.info("Loading LavaSrc plugin...");
@@ -131,6 +133,9 @@ public class LavaSrcPlugin implements AudioPlayerManagerConfiguration, SearchMan
 				tidal.setPlaylistTracksLoadLimit(tidalConfig.getPlaylistTracksLoadLimit());
 			}
 		}
+		if (sourcesConfig.isJiosaavan()) {
+			this.jioSavaan = new JioSavaanSourceManager();
+		}
 	}
 
 	private boolean hasNewYoutubeSource() {
@@ -173,6 +178,10 @@ public class LavaSrcPlugin implements AudioPlayerManagerConfiguration, SearchMan
 		if (this.tidal != null) {
 			log.info("Registering Tidal audio source manager...");
 			manager.registerSourceManager(this.tidal);
+		}
+		if (this.jioSavaan != null) {
+			log.info("Registering JioSavaan audio source manager...");
+			manager.registerSourceManager(this.jioSavaan);
 		}
 		return manager;
 	}
