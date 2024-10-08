@@ -169,9 +169,7 @@ public class AppleMusicSourceManager extends MirroringAudioSourceManager impleme
 
 	public void parseTokenData() throws IOException {
 		var parts = this.token.split("\\.");
-		if (parts.length < 3) {
-			throw new IllegalArgumentException("Invalid Apple Music API token provided");
-		}
+		
 		var json = JsonBrowser.parse(new String(Base64.getDecoder().decode(parts[1]), StandardCharsets.UTF_8));
 		this.origin = json.get("root_https_origin").index(0).text();
 	}
