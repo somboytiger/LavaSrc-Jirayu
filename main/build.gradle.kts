@@ -24,7 +24,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation("org.jetbrains.kotlin:kotlin-annotations-jvm:1.9.25")
     implementation("com.auth0:java-jwt:4.4.0")
-    compileOnly("org.slf4j:slf4j-api:2.0.7")
+    compileOnly("org.slf4j:slf4j-api:2.0.16")
 
     lyricsDependency("protocol")
     lyricsDependency("client")
