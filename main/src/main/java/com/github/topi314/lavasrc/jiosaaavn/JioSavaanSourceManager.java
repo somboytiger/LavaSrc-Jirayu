@@ -1,4 +1,4 @@
-package com.github.topi314.lavasrc.jiosavaan;
+package com.github.topi314.lavasrc.jiosaaavn;
 
 import com.github.topi314.lavasrc.ExtendedAudioPlaylist;
 import com.github.topi314.lavasrc.ExtendedAudioSourceManager;
