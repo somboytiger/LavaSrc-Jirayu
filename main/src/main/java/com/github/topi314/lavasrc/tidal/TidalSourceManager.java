@@ -41,31 +41,30 @@ public class TidalSourceManager extends MirroringAudioSourceManager implements H
 	public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36";
 	private static final Logger log = LoggerFactory.getLogger(TidalSourceManager.class);
 	private final HttpInterfaceManager httpInterfaceManager = HttpClientTools.createDefaultThreadLocalManager();
-	private final String tidalToken;
-	private final String countryCode;
+	private String countryCode = "US";
 	private int tracksSearchLimit = 50;
 	private int playlistTracksLoadLimit = 100;
 	private int artistTopTracksLoadLimit = 100;
 	private String token;
 
-	public TidalSourceManager(String[] providers, String tidalToken, String countryCode, AudioPlayerManager audioPlayerManager) {
-		this(tidalToken, countryCode, unused -> audioPlayerManager, new DefaultMirroringAudioTrackResolver(providers));
+	public TidalSourceManager(String[] providers, String countryCode, AudioPlayerManager audioPlayerManager) {
+		this(countryCode, unused -> audioPlayerManager, new DefaultMirroringAudioTrackResolver(providers));
 	}
 
-	public TidalSourceManager(String[] providers, String tidalToken, String countryCode, Function<Void, AudioPlayerManager> audioPlayerManager) {
-		this(tidalToken, countryCode, audioPlayerManager, new DefaultMirroringAudioTrackResolver(providers));
+	public TidalSourceManager(String[] providers, String countryCode, Function<Void, AudioPlayerManager> audioPlayerManager) {
+		this(countryCode, audioPlayerManager, new DefaultMirroringAudioTrackResolver(providers));
 	}
 
-	public TidalSourceManager(String tidalToken, String countryCode, AudioPlayerManager audioPlayerManager, MirroringAudioTrackResolver mirroringAudioTrackResolver) {
-		this(tidalToken, countryCode, unused -> audioPlayerManager, mirroringAudioTrackResolver);
+	public TidalSourceManager(String countryCode, AudioPlayerManager audioPlayerManager, MirroringAudioTrackResolver mirroringAudioTrackResolver) {
+		this(countryCode, unused -> audioPlayerManager, mirroringAudioTrackResolver);
 	}
 
-	public TidalSourceManager(String tidalToken, String countryCode, Function<Void, AudioPlayerManager> audioPlayerManager, MirroringAudioTrackResolver mirroringAudioTrackResolver) {
+	public TidalSourceManager(String countryCode, Function<Void, AudioPlayerManager> audioPlayerManager, MirroringAudioTrackResolver mirroringAudioTrackResolver) {
 		super(audioPlayerManager, mirroringAudioTrackResolver);
-
-		this.tidalToken = tidalToken;
-		if (countryCode == null || countryCode.isEmpty()) countryCode = "US";
-		this.countryCode = countryCode;
+		
+		if (countryCode != null) {
+			this.countryCode = countryCode;
+		}
 	}
 
 	public void setTracksSearchLimit(int tracksSearchLimit) {
