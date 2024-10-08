@@ -68,6 +68,7 @@ public class AppleMusicSourceManager extends MirroringAudioSourceManager impleme
 
 	public AppleMusicSourceManager(String countryCode, Function<Void, AudioPlayerManager> audioPlayerManager, MirroringAudioTrackResolver mirroringAudioTrackResolver) {
 		super(audioPlayerManager, mirroringAudioTrackResolver);
+		fetchToken();
 
 		try {
 			this.parseTokenData();
