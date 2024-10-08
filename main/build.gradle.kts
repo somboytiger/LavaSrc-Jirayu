@@ -17,7 +17,7 @@ java {
 dependencies {
     api("com.github.topi314.lavasearch:lavasearch:1.0.0")
     api("com.github.topi314.lavalyrics:lavalyrics:1.0.0")
-    compileOnly("dev.arbjerg:lavaplayer:2.0.4")
+    compileOnly("dev.arbjerg:lavaplayer:2.2.2")
     compileOnly("com.github.lavalink-devs.youtube-source:common:1.0.7")
     implementation("org.jsoup:jsoup:1.15.3")
     implementation("commons-io:commons-io:2.7")
