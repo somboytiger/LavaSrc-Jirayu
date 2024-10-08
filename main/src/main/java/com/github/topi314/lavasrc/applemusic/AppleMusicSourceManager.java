@@ -182,13 +182,13 @@ public class AppleMusicSourceManager extends MirroringAudioSourceManager impleme
 
 		try (CloseableHttpResponse mainPageResponse = this.httpInterfaceManager.getInterface().execute(mainPageRequest)) {
 			if (mainPageResponse.getStatusLine().getStatusCode() != 200) {
-				throw new RuntimeException("Failed to get token. Main TIDAL page didn't return 200 (OK).");
+				throw new RuntimeException("Failed to get token. Main Apple Music page didn't return 200 (OK).");
 			}
 			String mainPageHtml = EntityUtils.toString(mainPageResponse.getEntity());
 			Matcher scriptMatcher = APP_REGEX.matcher(mainPageHtml);
 			if (scriptMatcher.find()) {
 				String scriptId = scriptMatcher.group(1);
-				String scriptUrl = MAIN_BASE + "/assets/index." + scriptId + ".js";
+				String scriptUrl = MAIN_BASE + "/assets/index-" + scriptId + ".js";
 				HttpGet scriptPageRequest = new HttpGet(scriptUrl);
 				scriptPageRequest.addHeader("User-Agent", USER_AGENT);
 				try (CloseableHttpResponse scriptPageResponse = this.httpInterfaceManager.getInterface().execute(scriptPageRequest)) {
