@@ -8,11 +8,13 @@ import com.sedmelluq.discord.lavaplayer.tools.io.HttpConfigurable;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterfaceManager;
 import com.sedmelluq.discord.lavaplayer.track.*;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import com.github.topi314.lavasrc.mirror.DefaultMirroringAudioTrackResolver;
 import com.github.topi314.lavasrc.mirror.MirroringAudioSourceManager;
 import com.github.topi314.lavasrc.mirror.MirroringAudioTrackResolver;
+import org.apache.http.util.EntityUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +27,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TidalSourceManager extends MirroringAudioSourceManager implements HttpConfigurable {
 
+	public static final Pattern APP_REGEX = Pattern.compile("src=\"/app\\.([a-zA-Z0-9-_]+)\\.js\"");
+	public static final Pattern TOKEN_REGEX = Pattern.compile("[a-zA-Z0-9-_]{2}\\(\\)\\?\"[a-zA-Z0-9-_]+\":\"([a-zA-Z0-9-_]+)\"");
 	public static final Pattern URL_PATTERN = Pattern.compile("^(https?://)?(www\\.)?(listen\\.)?(embed\\.)?tidal\\.com/((browse/)?(?<type>track|album|playlist|mix|artist)|(tracks|albums|playlists|artists))/(?<identifier>[a-zA-Z0-9-_]+)");
 	public static final String SEARCH_PREFIX = "tdsearch:";
 	public static final String API_BASE = "https://api.tidal.com/v1/";
+	public static final String MAIN_BASE = "https://listen.tidal.com";
+	public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36";
 	private static final Logger log = LoggerFactory.getLogger(TidalSourceManager.class);
 	private final HttpInterfaceManager httpInterfaceManager = HttpClientTools.createDefaultThreadLocalManager();
 	private final String tidalToken;
@@ -39,6 +46,7 @@ public class TidalSourceManager extends MirroringAudioSourceManager implements H
 	private int tracksSearchLimit = 50;
 	private int playlistTracksLoadLimit = 100;
 	private int artistTopTracksLoadLimit = 100;
+	private String token;
 
 	public TidalSourceManager(String[] providers, String tidalToken, String countryCode, AudioPlayerManager audioPlayerManager) {
 		this(tidalToken, countryCode, unused -> audioPlayerManager, new DefaultMirroringAudioTrackResolver(providers));
@@ -72,9 +80,54 @@ public class TidalSourceManager extends MirroringAudioSourceManager implements H
 		this.artistTopTracksLoadLimit = artistTopTracksLoadLimit;
 	}
 
+
+	private void getToken() throws IOException {
+		HttpGet mainPageRequest = new HttpGet(MAIN_BASE);
+		mainPageRequest.addHeader("User-Agent", USER_AGENT);
+
+		try (CloseableHttpResponse mainPageResponse = this.httpInterfaceManager.getInterface().execute(mainPageRequest)) {
+			if (mainPageResponse.getStatusLine().getStatusCode() != 200) {
+				throw new RuntimeException("Failed to get token. Main TIDAL page didn't return 200 (OK).");
+			}
+			String mainPageHtml = EntityUtils.toString(mainPageResponse.getEntity());
+			Matcher scriptMatcher = APP_REGEX.matcher(mainPageHtml);
+			if (scriptMatcher.find()) {
+				String scriptId = scriptMatcher.group(1);
+				String scriptUrl = MAIN_BASE + "/app." + scriptId + ".js";
+				HttpGet scriptPageRequest = new HttpGet(scriptUrl);
+				scriptPageRequest.addHeader("User-Agent", USER_AGENT);
+				try (CloseableHttpResponse scriptPageResponse = this.httpInterfaceManager.getInterface().execute(scriptPageRequest)) {
+					if (scriptPageResponse.getStatusLine().getStatusCode() != 200) {
+						throw new RuntimeException("Failed to get token. Script page didn't return 200 (OK).");
+					}
+					String scriptPageHtml = EntityUtils.toString(scriptPageResponse.getEntity());
+					Matcher tokenMatcher = TOKEN_REGEX.matcher(scriptPageHtml);
+					if (tokenMatcher.find()) {
+						token = tokenMatcher.group(1);
+					} else {
+						throw new RuntimeException("Token not found on script page.");
+					}
+				}
+			} else {
+				throw new RuntimeException("Script ID not found on main TIDAL page.");
+			}
+		}
+	}
+
 	private JsonBrowser getJson(String uri) throws IOException {
 		var request = new HttpGet(uri);
-		request.addHeader("x-tidal-token", this.tidalToken);
+		request.addHeader("x-tidal-token", token);
+
+		try (CloseableHttpResponse scriptPageResponse = this.httpInterfaceManager.getInterface().execute(request)) {
+			if (scriptPageResponse.getStatusLine().getStatusCode() == 401) {
+				getToken();
+				return this.getJson(uri);
+			}
+			if (scriptPageResponse.getStatusLine().getStatusCode() != 200) {
+				throw new RuntimeException("TIDAL API didn't return 200 (OK) as status code.");
+			};
+		}
+
 		return HttpClientTools.fetchResponseAsJson(this.httpInterfaceManager.getInterface(), request);
 	}
 
