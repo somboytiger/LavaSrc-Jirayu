@@ -188,7 +188,7 @@ public class AppleMusicSourceManager extends MirroringAudioSourceManager impleme
 			Matcher scriptMatcher = APP_REGEX.matcher(mainPageHtml);
 			if (scriptMatcher.find()) {
 				String scriptId = scriptMatcher.group(1);
-				String scriptUrl = MAIN_BASE + "/app." + scriptId + ".js";
+				String scriptUrl = MAIN_BASE + "/assets/index." + scriptId + ".js";
 				HttpGet scriptPageRequest = new HttpGet(scriptUrl);
 				scriptPageRequest.addHeader("User-Agent", USER_AGENT);
 				try (CloseableHttpResponse scriptPageResponse = this.httpInterfaceManager.getInterface().execute(scriptPageRequest)) {
@@ -204,7 +204,7 @@ public class AppleMusicSourceManager extends MirroringAudioSourceManager impleme
 					}
 				}
 			} else {
-				throw new RuntimeException("Script ID not found on main TIDAL page.");
+				throw new RuntimeException("Script ID not found on main Apple Music page.");
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
